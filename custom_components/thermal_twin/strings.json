@@ -1,0 +1,83 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a room",
+        "description": "ThermalTwin learns how this room heats up and cools down from your existing sensors. Nothing is controlled, it only creates prediction entities.",
+        "data": {
+          "name": "Room name",
+          "indoor_sensor": "Indoor temperature sensor",
+          "outdoor_entity": "Outdoor temperature (sensor or weather entity)",
+          "target_temperature": "Target temperature",
+          "hvac_entity": "Heating / cooling entity (optional)",
+          "hvac_type": "Type of a non-climate HVAC entity",
+          "window_sensors": "Window / door sensors (optional)",
+          "solar_sensor": "Solar sensor (optional, W/m² or lux)",
+          "comfort_max": "Comfort maximum for ventilation advice (optional)"
+        },
+        "data_description": {
+          "target_temperature": "Time-to-target predictions refer to this temperature, e.g. 19 °C as lower limit in winter or 28 °C as upper limit in a hot climate.",
+          "hvac_entity": "Periods with heating or cooling active are learned separately. A climate entity reports heating/cooling itself; for a switch or plug choose the type below.",
+          "window_sensors": "Periods with an open window are ignored for learning.",
+          "comfort_max": "Creates a ventilation sensor that turns on when the room is warmer than this and outside is cooler."
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Indoor and outdoor entity must be different."
+    },
+    "abort": {
+      "already_configured": "This indoor sensor already has a ThermalTwin."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Room settings",
+        "data": {
+          "indoor_sensor": "Indoor temperature sensor",
+          "outdoor_entity": "Outdoor temperature (sensor or weather entity)",
+          "target_temperature": "Target temperature",
+          "hvac_entity": "Heating / cooling entity (optional)",
+          "hvac_type": "Type of a non-climate HVAC entity",
+          "window_sensors": "Window / door sensors (optional)",
+          "solar_sensor": "Solar sensor (optional, W/m² or lux)",
+          "comfort_max": "Comfort maximum for ventilation advice (optional)"
+        },
+        "data_description": {
+          "indoor_sensor": "Changing sensors discards the learned data and relearns from recorder history."
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Indoor and outdoor entity must be different."
+    }
+  },
+  "selector": {
+    "hvac_type": {
+      "options": {
+        "heat": "Heating",
+        "cool": "Cooling"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ventilation_recommended": { "name": "Ventilation recommended" },
+      "model_trained": { "name": "Model trained" }
+    },
+    "button": {
+      "reset_model": { "name": "Reset model" }
+    },
+    "sensor": {
+      "time_to_target": { "name": "Time to target" },
+      "time_to_target_hvac": { "name": "Time to target with HVAC" },
+      "equilibrium_temperature": { "name": "Equilibrium temperature" },
+      "predicted_temperature_1h": { "name": "Predicted temperature in 1 h" },
+      "time_constant": { "name": "Thermal time constant" },
+      "model_quality": { "name": "Model quality" },
+      "heating_rate": { "name": "Heating rate" },
+      "cooling_rate": { "name": "Cooling rate" }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "ventilation_recommended": {
+        "default": "mdi:window-closed-variant",
+        "state": { "on": "mdi:window-open-variant" }
+      },
+      "model_trained": {
+        "default": "mdi:school-outline",
+        "state": { "on": "mdi:school" }
+      }
+    },
+    "button": {
+      "reset_model": { "default": "mdi:restore" }
+    },
+    "sensor": {
+      "time_to_target": { "default": "mdi:timer-sand" },
+      "time_to_target_hvac": { "default": "mdi:radiator" },
+      "equilibrium_temperature": { "default": "mdi:scale-balance" },
+      "predicted_temperature_1h": { "default": "mdi:thermometer-chevron-up" },
+      "time_constant": { "default": "mdi:home-thermometer-outline" },
+      "model_quality": { "default": "mdi:chart-bell-curve-cumulative" },
+      "heating_rate": { "default": "mdi:fire" },
+      "cooling_rate": { "default": "mdi:snowflake" }
+    }
+  }
+}
