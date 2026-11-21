@@ -1,0 +1,83 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Raum hinzufügen",
+        "description": "ThermalTwin lernt aus deinen vorhandenen Sensoren, wie schnell dieser Raum auskühlt und aufheizt. Es wird nichts gesteuert, es entstehen nur Vorhersage-Entitäten.",
+        "data": {
+          "name": "Raumname",
+          "indoor_sensor": "Innentemperatur-Sensor",
+          "outdoor_entity": "Außentemperatur (Sensor oder Wetter-Entität)",
+          "target_temperature": "Zieltemperatur",
+          "hvac_entity": "Heizung / Kühlung (optional)",
+          "hvac_type": "Art einer Nicht-Climate-Entität",
+          "window_sensors": "Fenster-/Türkontakte (optional)",
+          "solar_sensor": "Sonnensensor (optional, W/m² oder Lux)",
+          "comfort_max": "Komfort-Maximum für Lüftungsempfehlung (optional)"
+        },
+        "data_description": {
+          "target_temperature": "Die Zeit-bis-Ziel-Vorhersagen beziehen sich auf diese Temperatur, z. B. 19 °C als Untergrenze im Winter oder 28 °C als Obergrenze in den Tropen.",
+          "hvac_entity": "Zeiten mit aktiver Heizung oder Kühlung werden getrennt gelernt. Eine Climate-Entität meldet Heizen/Kühlen selbst; bei Schalter oder Steckdose unten die Art wählen.",
+          "window_sensors": "Zeiten mit offenem Fenster werden beim Lernen ignoriert.",
+          "comfort_max": "Legt einen Lüftungssensor an, der einschaltet, wenn der Raum wärmer ist als dieser Wert und es draußen kühler ist."
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Innen- und Außen-Entität müssen verschieden sein."
+    },
+    "abort": {
+      "already_configured": "Für diesen Innensensor gibt es bereits einen ThermalTwin."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Raumeinstellungen",
+        "data": {
+          "indoor_sensor": "Innentemperatur-Sensor",
+          "outdoor_entity": "Außentemperatur (Sensor oder Wetter-Entität)",
+          "target_temperature": "Zieltemperatur",
+          "hvac_entity": "Heizung / Kühlung (optional)",
+          "hvac_type": "Art einer Nicht-Climate-Entität",
+          "window_sensors": "Fenster-/Türkontakte (optional)",
+          "solar_sensor": "Sonnensensor (optional, W/m² oder Lux)",
+          "comfort_max": "Komfort-Maximum für Lüftungsempfehlung (optional)"
+        },
+        "data_description": {
+          "indoor_sensor": "Ein Sensorwechsel verwirft die gelernten Daten und lernt neu aus dem Recorder-Verlauf."
+        }
+      }
+    },
+    "error": {
+      "same_entity": "Innen- und Außen-Entität müssen verschieden sein."
+    }
+  },
+  "selector": {
+    "hvac_type": {
+      "options": {
+        "heat": "Heizen",
+        "cool": "Kühlen"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ventilation_recommended": { "name": "Lüften empfohlen" },
+      "model_trained": { "name": "Modell trainiert" }
+    },
+    "button": {
+      "reset_model": { "name": "Modell zurücksetzen" }
+    },
+    "sensor": {
+      "time_to_target": { "name": "Zeit bis Zieltemperatur" },
+      "time_to_target_hvac": { "name": "Zeit bis Ziel mit Heizung/Kühlung" },
+      "equilibrium_temperature": { "name": "Gleichgewichtstemperatur" },
+      "predicted_temperature_1h": { "name": "Vorhersage in 1 h" },
+      "time_constant": { "name": "Thermische Zeitkonstante" },
+      "model_quality": { "name": "Modellgüte" },
+      "heating_rate": { "name": "Heizrate" },
+      "cooling_rate": { "name": "Kühlrate" }
+    }
+  }
+}
