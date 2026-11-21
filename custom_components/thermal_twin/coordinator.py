@@ -103,11 +103,16 @@ def _to_float(value: Any) -> float | None:
     return result if math.isfinite(result) else None
 
 
+def _domain(state: State) -> str:
+    """Return the domain; recorder LazyState objects have no domain attribute."""
+    return state.entity_id.split(".", 1)[0]
+
+
 def read_temperature(state: State | None, default_unit: str) -> float | None:
     """Read a temperature in °C from a sensor or weather state."""
     if state is None or state.state in _INVALID_STATES:
         return None
-    if state.domain == "weather":
+    if _domain(state) == "weather":
         value = _to_float(state.attributes.get("temperature"))
         unit = state.attributes.get("temperature_unit", default_unit)
     else:
@@ -144,7 +149,7 @@ def determine_mode(
     if hvac_state is None or hvac_state.state in _INVALID_STATES:
         return None
 
-    if hvac_state.domain == "climate":
+    if _domain(hvac_state) == "climate":
         action = hvac_state.attributes.get("hvac_action")
         if action is not None:
             if action in _HEATING_ACTIONS:
@@ -317,9 +322,20 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
             )
             return
 
-        samples = await self.hass.async_add_executor_job(
-            self._resample_history, history_states, start.timestamp(), end.timestamp()
-        )
+        try:
+            samples = await self.hass.async_add_executor_job(
+                self._resample_history,
+                history_states,
+                start.timestamp(),
+                end.timestamp(),
+            )
+        except Exception:  # noqa: BLE001 - history is best effort
+            LOGGER.warning(
+                "%s: could not process recorder history, learning from scratch",
+                self.config_entry.title,
+                exc_info=True,
+            )
+            return
         self._samples.extend(samples)
         LOGGER.info(
             "%s: bootstrapped %s samples from %s days of history",
