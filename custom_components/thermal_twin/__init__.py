@@ -2,15 +2,42 @@
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
+
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN, LOGGER
 from .coordinator import ThermalTwinCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+CARD_URL = f"/{DOMAIN}/thermal-twin-card.js"
+CARD_PATH = Path(__file__).parent / "frontend" / "thermal-twin-card.js"
+
 type ThermalTwinConfigEntry = ConfigEntry[ThermalTwinCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Serve the bundled Lovelace card - no separate resource needed."""
+    try:
+        content = await hass.async_add_executor_job(CARD_PATH.read_bytes)
+        version = hashlib.sha256(content).hexdigest()[:10]
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(CARD_URL, str(CARD_PATH), cache_headers=True)]
+        )
+        add_extra_js_url(hass, f"{CARD_URL}?v={version}")
+    except Exception:  # noqa: BLE001 - the integration works without the card
+        LOGGER.warning("Could not register the ThermalTwin card", exc_info=True)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThermalTwinConfigEntry) -> bool:
@@ -37,7 +64,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ThermalTwinConfigEntry)
     # Imported here to avoid a module-level dependency cycle.
     from homeassistant.helpers.storage import Store  # noqa: PLC0415
 
-    from .const import DOMAIN, STORAGE_VERSION  # noqa: PLC0415
+    from .const import STORAGE_VERSION  # noqa: PLC0415
 
     await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}").async_remove()
 

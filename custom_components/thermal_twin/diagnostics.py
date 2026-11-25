@@ -31,5 +31,16 @@ async def async_get_config_entry_diagnostics(
             "equilibrium": data.equilibrium,
             "time_to_target_min": data.time_to_target_min,
             "time_to_target_hvac_min": data.time_to_target_hvac_min,
+            "status": data.status,
+            "hvac_on": data.hvac_on,
+            "rh_in": data.rh_in,
+            "rh_out": data.rh_out,
+            "precondition": None if data.precondition is None else {
+                "status": data.precondition.status,
+                "start_ts": data.precondition.start_ts,
+                "hvac_minutes": data.precondition.hvac_minutes,
+            },
+            "uses_weather_forecast": data.uses_weather_forecast,
+            "solar_source": data.solar_source,
         },
     }

@@ -3,25 +3,94 @@
     "binary_sensor": {
       "ventilation_recommended": {
         "default": "mdi:window-closed-variant",
-        "state": { "on": "mdi:window-open-variant" }
+        "state": {
+          "on": "mdi:window-open-variant"
+        }
       },
       "model_trained": {
         "default": "mdi:school-outline",
-        "state": { "on": "mdi:school" }
+        "state": {
+          "on": "mdi:school"
+        }
+      },
+      "precondition_now": {
+        "default": "mdi:clock-outline",
+        "state": {
+          "on": "mdi:clock-alert-outline"
+        }
+      },
+      "dry_mode_recommended": {
+        "default": "mdi:water-percent",
+        "state": {
+          "on": "mdi:water-percent-alert"
+        }
       }
     },
     "button": {
-      "reset_model": { "default": "mdi:restore" }
+      "reset_model": {
+        "default": "mdi:restore"
+      }
     },
     "sensor": {
-      "time_to_target": { "default": "mdi:timer-sand" },
-      "time_to_target_hvac": { "default": "mdi:radiator" },
-      "equilibrium_temperature": { "default": "mdi:scale-balance" },
-      "predicted_temperature_1h": { "default": "mdi:thermometer-chevron-up" },
-      "time_constant": { "default": "mdi:home-thermometer-outline" },
-      "model_quality": { "default": "mdi:chart-bell-curve-cumulative" },
-      "heating_rate": { "default": "mdi:fire" },
-      "cooling_rate": { "default": "mdi:snowflake" }
+      "time_to_target": {
+        "default": "mdi:timer-sand"
+      },
+      "time_to_target_hvac": {
+        "default": "mdi:radiator"
+      },
+      "equilibrium_temperature": {
+        "default": "mdi:scale-balance"
+      },
+      "predicted_temperature_1h": {
+        "default": "mdi:thermometer-chevron-up"
+      },
+      "time_constant": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "model_quality": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "heating_rate": {
+        "default": "mdi:fire"
+      },
+      "cooling_rate": {
+        "default": "mdi:snowflake"
+      },
+      "status": {
+        "default": "mdi:home-thermometer",
+        "state": {
+          "learning": "mdi:school-outline",
+          "comfortable": "mdi:emoticon-happy-outline",
+          "too_warm": "mdi:thermometer-high",
+          "too_cold": "mdi:thermometer-low",
+          "ventilate": "mdi:window-open-variant",
+          "dry": "mdi:water-percent",
+          "precondition": "mdi:clock-alert-outline",
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:fire"
+        }
+      },
+      "precondition_start": {
+        "default": "mdi:clock-start"
+      },
+      "dew_point": {
+        "default": "mdi:water-thermometer"
+      },
+      "absolute_humidity": {
+        "default": "mdi:water"
+      },
+      "apparent_temperature": {
+        "default": "mdi:sun-thermometer"
+      },
+      "hvac_runtime_today": {
+        "default": "mdi:timer-outline"
+      },
+      "hvac_energy_today": {
+        "default": "mdi:lightning-bolt"
+      },
+      "hvac_efficiency": {
+        "default": "mdi:gauge"
+      }
     }
   }
 }

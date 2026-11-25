@@ -3,23 +3,42 @@
     "step": {
       "user": {
         "title": "Add a room",
-        "description": "ThermalTwin learns how this room heats up and cools down from your existing sensors. Nothing is controlled, it only creates prediction entities.",
+        "description": "ThermalTwin learns how this room heats up and cools down from your existing sensors. Nothing is controlled - it creates prediction and advice entities you can use in automations.",
         "data": {
           "name": "Room name",
           "indoor_sensor": "Indoor temperature sensor",
           "outdoor_entity": "Outdoor temperature (sensor or weather entity)",
           "target_temperature": "Target temperature",
           "hvac_entity": "Heating / cooling entity (optional)",
-          "hvac_type": "Type of a non-climate HVAC entity",
+          "hvac_type": "What the unit does",
           "window_sensors": "Window / door sensors (optional)",
           "solar_sensor": "Solar sensor (optional, W/m² or lux)",
-          "comfort_max": "Comfort maximum for ventilation advice (optional)"
+          "comfort_min": "Comfort minimum (optional)",
+          "comfort_max": "Comfort maximum (optional)",
+          "indoor_humidity": "Indoor humidity sensor (optional)",
+          "outdoor_humidity": "Outdoor humidity sensor (optional)",
+          "humidity_max": "Humidity limit",
+          "weather_entity": "Weather entity for the hourly forecast (optional)",
+          "power_sensor": "Power meter of the unit (optional)",
+          "power_threshold": "Running above",
+          "ready_by": "Ready by (optional)",
+          "ready_temperature": "Ready temperature (optional)",
+          "use_sun": "Learn the sun's effect from its position"
         },
         "data_description": {
           "target_temperature": "Time-to-target predictions refer to this temperature, e.g. 19 °C as lower limit in winter or 28 °C as upper limit in a hot climate.",
-          "hvac_entity": "Periods with heating or cooling active are learned separately. A climate entity reports heating/cooling itself; for a switch or plug choose the type below.",
-          "window_sensors": "Periods with an open window are ignored for learning.",
-          "comfort_max": "Creates a ventilation sensor that turns on when the room is warmer than this and outside is cooler."
+          "hvac_entity": "Periods with heating or cooling are learned separately. IR units without feedback (SmartIR, Broadlink) are supported: periods where the room already sits at the setpoint are skipped so the real pull-down capacity is learned.",
+          "hvac_type": "Cooling for air conditioners, heating for radiators and heat pumps in heating mode.",
+          "window_sensors": "Periods with an open window or door are ignored for learning.",
+          "comfort_max": "Upper comfort limit. Enables the ventilation advice and the comfort band of the card.",
+          "indoor_humidity": "Adds dew point, absolute humidity, feels-like temperature and the dry-mode advice.",
+          "outdoor_humidity": "Lets the ventilation advice check whether outside air would bring in more moisture. Taken from the weather entity when the outdoor temperature comes from one.",
+          "humidity_max": "Above this relative humidity dry mode is recommended instead of cooling.",
+          "weather_entity": "Predictions then follow the forecast outdoor temperature instead of assuming it stays constant.",
+          "power_sensor": "The most reliable way to know when the compressor really runs. Adds runtime, energy and efficiency.",
+          "ready_by": "The twin plans when the unit has to start so the room reaches the ready temperature at this time every day, e.g. bedtime.",
+          "ready_temperature": "Temperature the room should have at the ready time. Defaults to the target temperature.",
+          "use_sun": "Used when no solar sensor is set. Helps rooms that heat up in the afternoon sun."
         }
       }
     },
@@ -39,12 +58,35 @@
           "outdoor_entity": "Outdoor temperature (sensor or weather entity)",
           "target_temperature": "Target temperature",
           "hvac_entity": "Heating / cooling entity (optional)",
-          "hvac_type": "Type of a non-climate HVAC entity",
+          "hvac_type": "What the unit does",
           "window_sensors": "Window / door sensors (optional)",
           "solar_sensor": "Solar sensor (optional, W/m² or lux)",
-          "comfort_max": "Comfort maximum for ventilation advice (optional)"
+          "comfort_min": "Comfort minimum (optional)",
+          "comfort_max": "Comfort maximum (optional)",
+          "indoor_humidity": "Indoor humidity sensor (optional)",
+          "outdoor_humidity": "Outdoor humidity sensor (optional)",
+          "humidity_max": "Humidity limit",
+          "weather_entity": "Weather entity for the hourly forecast (optional)",
+          "power_sensor": "Power meter of the unit (optional)",
+          "power_threshold": "Running above",
+          "ready_by": "Ready by (optional)",
+          "ready_temperature": "Ready temperature (optional)",
+          "use_sun": "Learn the sun's effect from its position"
         },
         "data_description": {
+          "target_temperature": "Time-to-target predictions refer to this temperature, e.g. 19 °C as lower limit in winter or 28 °C as upper limit in a hot climate.",
+          "hvac_entity": "Periods with heating or cooling are learned separately. IR units without feedback (SmartIR, Broadlink) are supported: periods where the room already sits at the setpoint are skipped so the real pull-down capacity is learned.",
+          "hvac_type": "Cooling for air conditioners, heating for radiators and heat pumps in heating mode.",
+          "window_sensors": "Periods with an open window or door are ignored for learning.",
+          "comfort_max": "Upper comfort limit. Enables the ventilation advice and the comfort band of the card.",
+          "indoor_humidity": "Adds dew point, absolute humidity, feels-like temperature and the dry-mode advice.",
+          "outdoor_humidity": "Lets the ventilation advice check whether outside air would bring in more moisture. Taken from the weather entity when the outdoor temperature comes from one.",
+          "humidity_max": "Above this relative humidity dry mode is recommended instead of cooling.",
+          "weather_entity": "Predictions then follow the forecast outdoor temperature instead of assuming it stays constant.",
+          "power_sensor": "The most reliable way to know when the compressor really runs. Adds runtime, energy and efficiency.",
+          "ready_by": "The twin plans when the unit has to start so the room reaches the ready temperature at this time every day, e.g. bedtime.",
+          "ready_temperature": "Temperature the room should have at the ready time. Defaults to the target temperature.",
+          "use_sun": "Used when no solar sensor is set. Helps rooms that heat up in the afternoon sun.",
           "indoor_sensor": "Changing sensors discards the learned data and relearns from recorder history."
         }
       }
@@ -63,21 +105,84 @@
   },
   "entity": {
     "binary_sensor": {
-      "ventilation_recommended": { "name": "Ventilation recommended" },
-      "model_trained": { "name": "Model trained" }
+      "ventilation_recommended": {
+        "name": "Ventilation recommended"
+      },
+      "model_trained": {
+        "name": "Model trained"
+      },
+      "precondition_now": {
+        "name": "Start now for ready time"
+      },
+      "dry_mode_recommended": {
+        "name": "Dry mode recommended"
+      }
     },
     "button": {
-      "reset_model": { "name": "Reset model" }
+      "reset_model": {
+        "name": "Reset model"
+      }
     },
     "sensor": {
-      "time_to_target": { "name": "Time to target" },
-      "time_to_target_hvac": { "name": "Time to target with HVAC" },
-      "equilibrium_temperature": { "name": "Equilibrium temperature" },
-      "predicted_temperature_1h": { "name": "Predicted temperature in 1 h" },
-      "time_constant": { "name": "Thermal time constant" },
-      "model_quality": { "name": "Model quality" },
-      "heating_rate": { "name": "Heating rate" },
-      "cooling_rate": { "name": "Cooling rate" }
+      "status": {
+        "name": "Status",
+        "state": {
+          "learning": "Learning",
+          "comfortable": "Comfortable",
+          "too_warm": "Too warm",
+          "too_cold": "Too cold",
+          "ventilate": "Open the windows",
+          "dry": "Dry mode recommended",
+          "precondition": "Start the unit now",
+          "cooling": "Cooling",
+          "heating": "Heating"
+        }
+      },
+      "time_to_target": {
+        "name": "Time to target"
+      },
+      "time_to_target_hvac": {
+        "name": "Time to target with HVAC"
+      },
+      "equilibrium_temperature": {
+        "name": "Equilibrium temperature"
+      },
+      "predicted_temperature_1h": {
+        "name": "Predicted temperature in 1 h"
+      },
+      "precondition_start": {
+        "name": "Start for ready time"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "absolute_humidity": {
+        "name": "Absolute humidity"
+      },
+      "apparent_temperature": {
+        "name": "Feels like"
+      },
+      "hvac_runtime_today": {
+        "name": "Runtime today"
+      },
+      "hvac_energy_today": {
+        "name": "Energy today"
+      },
+      "hvac_efficiency": {
+        "name": "Efficiency"
+      },
+      "time_constant": {
+        "name": "Thermal time constant"
+      },
+      "model_quality": {
+        "name": "Model quality"
+      },
+      "heating_rate": {
+        "name": "Heating rate"
+      },
+      "cooling_rate": {
+        "name": "Cooling rate"
+      }
     }
   }
 }

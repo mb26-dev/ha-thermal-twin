@@ -18,6 +18,18 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_COMFORT_MAX,
+    CONF_COMFORT_MIN,
+    CONF_HUMIDITY_MAX,
+    CONF_INDOOR_HUMIDITY,
+    CONF_OUTDOOR_HUMIDITY,
+    CONF_POWER_SENSOR,
+    CONF_POWER_THRESHOLD,
+    CONF_READY_BY,
+    CONF_READY_TEMPERATURE,
+    CONF_USE_SUN,
+    CONF_WEATHER_ENTITY,
+    DEFAULT_HUMIDITY_MAX,
+    DEFAULT_POWER_THRESHOLD,
     CONF_HVAC_ENTITY,
     CONF_HVAC_TYPE,
     CONF_INDOOR_SENSOR,
@@ -75,7 +87,43 @@ def _options_schema() -> vol.Schema:
             vol.Optional(CONF_SOLAR_SENSOR): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
             ),
+            vol.Optional(CONF_COMFORT_MIN): _TEMP_SELECTOR,
             vol.Optional(CONF_COMFORT_MAX): _TEMP_SELECTOR,
+            vol.Optional(CONF_INDOOR_HUMIDITY): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="humidity")
+            ),
+            vol.Optional(CONF_OUTDOOR_HUMIDITY): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="humidity")
+            ),
+            vol.Optional(CONF_HUMIDITY_MAX, default=DEFAULT_HUMIDITY_MAX): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=40,
+                    max=90,
+                    step=1,
+                    unit_of_measurement="%",
+                    mode=selector.NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Optional(CONF_WEATHER_ENTITY): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="weather")
+            ),
+            vol.Optional(CONF_POWER_SENSOR): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="power")
+            ),
+            vol.Optional(
+                CONF_POWER_THRESHOLD, default=DEFAULT_POWER_THRESHOLD
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1,
+                    max=3000,
+                    step=1,
+                    unit_of_measurement="W",
+                    mode=selector.NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Optional(CONF_READY_BY): selector.TimeSelector(),
+            vol.Optional(CONF_READY_TEMPERATURE): _TEMP_SELECTOR,
+            vol.Optional(CONF_USE_SUN, default=True): selector.BooleanSelector(),
         }
     )
 

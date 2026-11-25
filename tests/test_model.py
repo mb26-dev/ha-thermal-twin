@@ -105,3 +105,59 @@ def test_sample_roundtrip():
     assert model.Sample.from_list(sample.to_list()) == model.Sample(
         1.0, 21.123, 5.5, None, 0
     )
+
+
+def _params() -> "model.ModelParams":
+    return model.ModelParams(k=TRUE_K, offset=TRUE_OFFSET, cooling_rate=TRUE_COOL)
+
+
+def test_simulate_matches_analytic_prediction():
+    params = _params()
+    traj = model.simulate(params, 30.0, 0.0, 3.0, lambda _ts: 26.0)
+    expected = model.predict(params, 30.0, 26.0, None, 3.0)
+    assert abs(traj[-1][1] - expected) < 1e-6
+    assert len(traj) == 37
+
+
+def test_first_crossing_interpolates():
+    traj = [(0.0, 30.0), (100.0, 29.0), (200.0, 28.0)]
+    assert model.first_crossing(traj, 28.5) == 150.0
+    assert model.first_crossing(traj, 27.0) is None
+
+
+def test_precondition_schedules_latest_start():
+    params = _params()
+    plan = model.plan_precondition(
+        params, 30.0, 0.0, 4 * 3600.0, 28.0, TRUE_COOL, lambda _ts: 30.0
+    )
+    assert plan is not None
+    assert plan.status == "scheduled"
+    assert plan.with_hvac <= 28.05
+    # Starting one step later must miss the target.
+    late_start = plan.start_ts + 300.0
+    passive = model.simulate(params, 30.0, 0.0, late_start / 3600.0, lambda _ts: 30.0)
+    run = model.simulate(
+        params,
+        passive[-1][1],
+        late_start,
+        (4 * 3600.0 - late_start) / 3600.0,
+        lambda _ts: 30.0,
+        hvac_rate=TRUE_COOL,
+    )
+    assert run[-1][1] > 28.05
+
+
+def test_precondition_not_needed_when_room_cools_itself():
+    plan = model.plan_precondition(
+        _params(), 28.5, 0.0, 6 * 3600.0, 28.0, TRUE_COOL, lambda _ts: 20.0
+    )
+    assert plan is not None and plan.status == "not_needed"
+
+
+def test_psychrometrics():
+    assert abs(model.absolute_humidity(25.0, 50.0) - 11.5) < 0.2
+    assert abs(model.dew_point(25.0, 50.0) - 13.9) < 0.2
+    assert abs(model.heat_index(32.0, 70.0) - 40.5) < 1.0
+    assert abs(model.heat_index(20.0, 50.0) - 19.6) < 1.0
+    assert model.sun_factor(-10.0) == 0.0
+    assert abs(model.sun_factor(90.0) - 1.0) < 1e-9

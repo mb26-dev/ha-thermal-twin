@@ -3,23 +3,42 @@
     "step": {
       "user": {
         "title": "Raum hinzufügen",
-        "description": "ThermalTwin lernt aus deinen vorhandenen Sensoren, wie schnell dieser Raum auskühlt und aufheizt. Es wird nichts gesteuert, es entstehen nur Vorhersage-Entitäten.",
+        "description": "ThermalTwin lernt aus deinen vorhandenen Sensoren, wie sich dieser Raum aufheizt und abkühlt. Es wird nichts gesteuert - es entstehen Vorhersage- und Empfehlungs-Entitäten für deine Automationen.",
         "data": {
           "name": "Raumname",
           "indoor_sensor": "Innentemperatur-Sensor",
           "outdoor_entity": "Außentemperatur (Sensor oder Wetter-Entität)",
           "target_temperature": "Zieltemperatur",
-          "hvac_entity": "Heizung / Kühlung (optional)",
-          "hvac_type": "Art einer Nicht-Climate-Entität",
-          "window_sensors": "Fenster-/Türkontakte (optional)",
-          "solar_sensor": "Sonnensensor (optional, W/m² oder Lux)",
-          "comfort_max": "Komfort-Maximum für Lüftungsempfehlung (optional)"
+          "hvac_entity": "Heiz-/Kühl-Entität (optional)",
+          "hvac_type": "Was das Gerät macht",
+          "window_sensors": "Fenster-/Türsensoren (optional)",
+          "solar_sensor": "Solarsensor (optional, W/m² oder Lux)",
+          "comfort_min": "Komfort-Minimum (optional)",
+          "comfort_max": "Komfort-Maximum (optional)",
+          "indoor_humidity": "Innen-Feuchtesensor (optional)",
+          "outdoor_humidity": "Außen-Feuchtesensor (optional)",
+          "humidity_max": "Feuchte-Grenze",
+          "weather_entity": "Wetter-Entität für die Stundenvorhersage (optional)",
+          "power_sensor": "Leistungsmesser des Geräts (optional)",
+          "power_threshold": "Läuft ab",
+          "ready_by": "Fertig um (optional)",
+          "ready_temperature": "Temperatur zum Zeitpunkt (optional)",
+          "use_sun": "Sonneneinfluss über den Sonnenstand lernen"
         },
         "data_description": {
-          "target_temperature": "Die Zeit-bis-Ziel-Vorhersagen beziehen sich auf diese Temperatur, z. B. 19 °C als Untergrenze im Winter oder 28 °C als Obergrenze in den Tropen.",
-          "hvac_entity": "Zeiten mit aktiver Heizung oder Kühlung werden getrennt gelernt. Eine Climate-Entität meldet Heizen/Kühlen selbst; bei Schalter oder Steckdose unten die Art wählen.",
-          "window_sensors": "Zeiten mit offenem Fenster werden beim Lernen ignoriert.",
-          "comfort_max": "Legt einen Lüftungssensor an, der einschaltet, wenn der Raum wärmer ist als dieser Wert und es draußen kühler ist."
+          "target_temperature": "Die Zeit-bis-Ziel-Vorhersagen beziehen sich auf diese Temperatur, z. B. 19 °C als Untergrenze im Winter oder 28 °C als Obergrenze im heißen Klima.",
+          "hvac_entity": "Heiz- und Kühlphasen werden getrennt gelernt. IR-Geräte ohne Rückmeldung (SmartIR, Broadlink) werden unterstützt: Phasen, in denen der Raum schon am Sollwert ist, werden übersprungen, damit die echte Kühlleistung gelernt wird.",
+          "hvac_type": "Kühlen für Klimaanlagen, Heizen für Heizkörper und Wärmepumpen im Heizbetrieb.",
+          "window_sensors": "Phasen mit offenem Fenster oder offener Tür werden beim Lernen ignoriert.",
+          "comfort_max": "Obere Komfortgrenze. Schaltet die Lüftungsempfehlung und das Komfortband der Karte frei.",
+          "indoor_humidity": "Ergänzt Taupunkt, absolute Feuchte, gefühlte Temperatur und die Dry-Modus-Empfehlung.",
+          "outdoor_humidity": "Damit prüft die Lüftungsempfehlung, ob die Außenluft mehr Feuchte hereinbringt. Wird von der Wetter-Entität übernommen, wenn die Außentemperatur von dort kommt.",
+          "humidity_max": "Über dieser relativen Feuchte wird der Dry-Modus statt Kühlen empfohlen.",
+          "weather_entity": "Die Vorhersagen folgen dann der vorhergesagten Außentemperatur, statt sie als konstant anzunehmen.",
+          "power_sensor": "Der zuverlässigste Weg zu erkennen, wann der Kompressor wirklich läuft. Ergänzt Laufzeit, Energie und Effizienz.",
+          "ready_by": "Der Twin plant, wann das Gerät starten muss, damit der Raum jeden Tag zu dieser Uhrzeit die Zieltemperatur hat, z. B. zur Schlafenszeit.",
+          "ready_temperature": "Temperatur, die der Raum zur Uhrzeit haben soll. Standard ist die Zieltemperatur.",
+          "use_sun": "Wird genutzt, wenn kein Solarsensor gesetzt ist. Hilft bei Räumen, die sich in der Nachmittagssonne aufheizen."
         }
       }
     },
@@ -27,7 +46,7 @@
       "same_entity": "Innen- und Außen-Entität müssen verschieden sein."
     },
     "abort": {
-      "already_configured": "Für diesen Innensensor gibt es bereits einen ThermalTwin."
+      "already_configured": "Für diesen Innensensor gibt es schon einen ThermalTwin."
     }
   },
   "options": {
@@ -38,14 +57,37 @@
           "indoor_sensor": "Innentemperatur-Sensor",
           "outdoor_entity": "Außentemperatur (Sensor oder Wetter-Entität)",
           "target_temperature": "Zieltemperatur",
-          "hvac_entity": "Heizung / Kühlung (optional)",
-          "hvac_type": "Art einer Nicht-Climate-Entität",
-          "window_sensors": "Fenster-/Türkontakte (optional)",
-          "solar_sensor": "Sonnensensor (optional, W/m² oder Lux)",
-          "comfort_max": "Komfort-Maximum für Lüftungsempfehlung (optional)"
+          "hvac_entity": "Heiz-/Kühl-Entität (optional)",
+          "hvac_type": "Was das Gerät macht",
+          "window_sensors": "Fenster-/Türsensoren (optional)",
+          "solar_sensor": "Solarsensor (optional, W/m² oder Lux)",
+          "comfort_min": "Komfort-Minimum (optional)",
+          "comfort_max": "Komfort-Maximum (optional)",
+          "indoor_humidity": "Innen-Feuchtesensor (optional)",
+          "outdoor_humidity": "Außen-Feuchtesensor (optional)",
+          "humidity_max": "Feuchte-Grenze",
+          "weather_entity": "Wetter-Entität für die Stundenvorhersage (optional)",
+          "power_sensor": "Leistungsmesser des Geräts (optional)",
+          "power_threshold": "Läuft ab",
+          "ready_by": "Fertig um (optional)",
+          "ready_temperature": "Temperatur zum Zeitpunkt (optional)",
+          "use_sun": "Sonneneinfluss über den Sonnenstand lernen"
         },
         "data_description": {
-          "indoor_sensor": "Ein Sensorwechsel verwirft die gelernten Daten und lernt neu aus dem Recorder-Verlauf."
+          "target_temperature": "Die Zeit-bis-Ziel-Vorhersagen beziehen sich auf diese Temperatur, z. B. 19 °C als Untergrenze im Winter oder 28 °C als Obergrenze im heißen Klima.",
+          "hvac_entity": "Heiz- und Kühlphasen werden getrennt gelernt. IR-Geräte ohne Rückmeldung (SmartIR, Broadlink) werden unterstützt: Phasen, in denen der Raum schon am Sollwert ist, werden übersprungen, damit die echte Kühlleistung gelernt wird.",
+          "hvac_type": "Kühlen für Klimaanlagen, Heizen für Heizkörper und Wärmepumpen im Heizbetrieb.",
+          "window_sensors": "Phasen mit offenem Fenster oder offener Tür werden beim Lernen ignoriert.",
+          "comfort_max": "Obere Komfortgrenze. Schaltet die Lüftungsempfehlung und das Komfortband der Karte frei.",
+          "indoor_humidity": "Ergänzt Taupunkt, absolute Feuchte, gefühlte Temperatur und die Dry-Modus-Empfehlung.",
+          "outdoor_humidity": "Damit prüft die Lüftungsempfehlung, ob die Außenluft mehr Feuchte hereinbringt. Wird von der Wetter-Entität übernommen, wenn die Außentemperatur von dort kommt.",
+          "humidity_max": "Über dieser relativen Feuchte wird der Dry-Modus statt Kühlen empfohlen.",
+          "weather_entity": "Die Vorhersagen folgen dann der vorhergesagten Außentemperatur, statt sie als konstant anzunehmen.",
+          "power_sensor": "Der zuverlässigste Weg zu erkennen, wann der Kompressor wirklich läuft. Ergänzt Laufzeit, Energie und Effizienz.",
+          "ready_by": "Der Twin plant, wann das Gerät starten muss, damit der Raum jeden Tag zu dieser Uhrzeit die Zieltemperatur hat, z. B. zur Schlafenszeit.",
+          "ready_temperature": "Temperatur, die der Raum zur Uhrzeit haben soll. Standard ist die Zieltemperatur.",
+          "use_sun": "Wird genutzt, wenn kein Solarsensor gesetzt ist. Hilft bei Räumen, die sich in der Nachmittagssonne aufheizen.",
+          "indoor_sensor": "Ein Sensorwechsel verwirft die gelernten Daten und lernt neu aus dem Verlauf."
         }
       }
     },
@@ -63,21 +105,84 @@
   },
   "entity": {
     "binary_sensor": {
-      "ventilation_recommended": { "name": "Lüften empfohlen" },
-      "model_trained": { "name": "Modell trainiert" }
+      "ventilation_recommended": {
+        "name": "Lüften empfohlen"
+      },
+      "model_trained": {
+        "name": "Modell trainiert"
+      },
+      "precondition_now": {
+        "name": "Jetzt starten für Uhrzeit"
+      },
+      "dry_mode_recommended": {
+        "name": "Dry-Modus empfohlen"
+      }
     },
     "button": {
-      "reset_model": { "name": "Modell zurücksetzen" }
+      "reset_model": {
+        "name": "Modell zurücksetzen"
+      }
     },
     "sensor": {
-      "time_to_target": { "name": "Zeit bis Zieltemperatur" },
-      "time_to_target_hvac": { "name": "Zeit bis Ziel mit Heizung/Kühlung" },
-      "equilibrium_temperature": { "name": "Gleichgewichtstemperatur" },
-      "predicted_temperature_1h": { "name": "Vorhersage in 1 h" },
-      "time_constant": { "name": "Thermische Zeitkonstante" },
-      "model_quality": { "name": "Modellgüte" },
-      "heating_rate": { "name": "Heizrate" },
-      "cooling_rate": { "name": "Kühlrate" }
+      "status": {
+        "name": "Status",
+        "state": {
+          "learning": "Lernt",
+          "comfortable": "Angenehm",
+          "too_warm": "Zu warm",
+          "too_cold": "Zu kalt",
+          "ventilate": "Fenster öffnen",
+          "dry": "Dry-Modus empfohlen",
+          "precondition": "Gerät jetzt starten",
+          "cooling": "Kühlt",
+          "heating": "Heizt"
+        }
+      },
+      "time_to_target": {
+        "name": "Zeit bis Ziel"
+      },
+      "time_to_target_hvac": {
+        "name": "Zeit bis Ziel mit Gerät"
+      },
+      "equilibrium_temperature": {
+        "name": "Gleichgewichtstemperatur"
+      },
+      "predicted_temperature_1h": {
+        "name": "Vorhergesagte Temperatur in 1 h"
+      },
+      "precondition_start": {
+        "name": "Start für Uhrzeit"
+      },
+      "dew_point": {
+        "name": "Taupunkt"
+      },
+      "absolute_humidity": {
+        "name": "Absolute Feuchte"
+      },
+      "apparent_temperature": {
+        "name": "Gefühlt"
+      },
+      "hvac_runtime_today": {
+        "name": "Laufzeit heute"
+      },
+      "hvac_energy_today": {
+        "name": "Energie heute"
+      },
+      "hvac_efficiency": {
+        "name": "Effizienz"
+      },
+      "time_constant": {
+        "name": "Thermische Zeitkonstante"
+      },
+      "model_quality": {
+        "name": "Modellgüte"
+      },
+      "heating_rate": {
+        "name": "Heizrate"
+      },
+      "cooling_rate": {
+        "name": "Kühlrate"
+      }
     }
   }
 }

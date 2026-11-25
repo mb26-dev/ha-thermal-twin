@@ -1,0 +1,80 @@
+blueprint:
+  name: ThermalTwin - start the AC just in time
+  description: >-
+    Starts an air conditioner (or heating) at the moment ThermalTwin calculates,
+    so the room reaches the ready temperature exactly at the ready time - not
+    earlier, not later. Needs a ThermalTwin room with "Ready by" and an HVAC
+    entity configured.
+  domain: automation
+  source_url: https://github.com/mb26-dev/ha-thermal-twin/blob/main/blueprints/automation/thermal_twin/precondition.yaml
+  input:
+    start_sensor:
+      name: ThermalTwin "Start now for ready time" sensor
+      selector:
+        entity:
+          filter:
+            - integration: thermal_twin
+              domain: binary_sensor
+    climate_entity:
+      name: Air conditioner / thermostat
+      selector:
+        entity:
+          filter:
+            - domain: climate
+    hvac_mode:
+      name: Mode
+      default: cool
+      selector:
+        select:
+          options:
+            - cool
+            - heat
+            - dry
+    setpoint:
+      name: Setpoint
+      default: 25
+      selector:
+        number:
+          min: 16
+          max: 32
+          step: 0.5
+          unit_of_measurement: "°C"
+    only_when_home:
+      name: Only when someone is home (optional)
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: person
+
+mode: single
+
+trigger:
+  - trigger: state
+    entity_id: !input start_sensor
+    to: "on"
+
+variables:
+  people: !input only_when_home
+
+condition:
+  - condition: template
+    value_template: >-
+      {{ people | count == 0 or people | select('is_state', 'home') | list | count > 0 }}
+  - condition: state
+    entity_id: !input climate_entity
+    state: "off"
+
+action:
+  - action: climate.set_hvac_mode
+    target:
+      entity_id: !input climate_entity
+    data:
+      hvac_mode: !input hvac_mode
+  - delay: "00:00:02"
+  - action: climate.set_temperature
+    target:
+      entity_id: !input climate_entity
+    data:
+      temperature: !input setpoint
