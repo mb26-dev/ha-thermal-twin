@@ -7,7 +7,7 @@
  * Options: title, rooms (list of ThermalTwin status sensors to show, in order),
  *          glow (default true), hours (forecast hours, 3-12, default 12).
  */
-const TT_VERSION = "0.2.0";
+const TT_VERSION = "0.2.0b2";
 
 const STATUS = {
   learning: { c: "#FF9800", t: "LEARNING", i: "mdi:school-outline" },
@@ -290,11 +290,19 @@ class ThermalTwinCard extends HTMLElement {
     if (isNaN(d)) return null;
     const hass = this._hass;
     try {
-      return d.toLocaleTimeString((hass.locale && hass.locale.language) || hass.language || "en", {
+      const loc = hass.locale || {};
+      const opts = {
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: hass.config && hass.config.time_zone ? hass.config.time_zone : undefined,
-      });
+        timeZone: loc.time_zone === "local" ? undefined : hass.config && hass.config.time_zone ? hass.config.time_zone : undefined,
+      };
+      if (loc.time_format === "24") opts.hourCycle = "h23";
+      else if (loc.time_format === "12") opts.hour12 = true;
+      else if (loc.time_format === "system") {
+        const sys = new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions();
+        if (sys.hourCycle) opts.hourCycle = sys.hourCycle;
+      }
+      return d.toLocaleTimeString(loc.language || hass.language || "en", opts);
     } catch (e) {
       return d.toTimeString().slice(0, 5);
     }
@@ -375,8 +383,25 @@ class ThermalTwinCard extends HTMLElement {
       }
       case "cooling":
       case "heating": {
-        const eta = this._fmtTime(attr("time_to_target_hvac", "eta"));
-        advice = `<b>${status === "cooling" ? "Cooling" : "Heating"}.</b> ` + (eta && target !== null ? `Reaches ${target.toFixed(0)} °C around <b>${eta}</b>.` : "The twin is learning the unit's real capacity.");
+        const cooling = status === "cooling";
+        const goal = readyT !== null ? readyT : cooling ? (lower !== null ? lower : target) : target;
+        let when = null;
+        const fc = Array.isArray(a.forecast) ? a.forecast : [];
+        if (goal !== null && tin !== null && (cooling ? tin > goal : tin < goal)) {
+          for (const p of fc) {
+            if (p[2] !== null && p[2] !== undefined && (cooling ? p[2] <= goal : p[2] >= goal)) { when = p[0]; break; }
+          }
+        }
+        const hasRate = fc.some((p) => p[2] !== null && p[2] !== undefined);
+        if (goal !== null && tin !== null && (cooling ? tin <= goal : tin >= goal)) {
+          advice = `<b>${cooling ? "Cooling" : "Heating"}.</b> Already at ${goal.toFixed(0)} °C – the unit is only holding.`;
+        } else if (when !== null) {
+          advice = `<b>${cooling ? "Cooling" : "Heating"}.</b> Reaches ${goal.toFixed(0)} °C around <b>${this._fmtTime(new Date(Date.now() + when * 60000).toISOString())}</b>.`;
+        } else if (hasRate && goal !== null) {
+          advice = `<b>${cooling ? "Cooling" : "Heating"}.</b> ${goal.toFixed(0)} °C is out of reach within ${this._config.hours || 12} h at the learned capacity – lower the setpoint or raise the fan.`;
+        } else {
+          advice = `<b>${cooling ? "Cooling" : "Heating"}.</b> The twin is still learning the unit's real capacity.`;
+        }
         break;
       }
       case "precondition":
@@ -391,7 +416,11 @@ class ThermalTwinCard extends HTMLElement {
       case "too_warm":
         advice = a.ventilation_blocked_by_humidity
           ? `<b>Too warm – keep windows closed.</b> Outside is cooler but carries ${absOut !== null && absIn !== null ? (absOut - absIn).toFixed(1) : "much"} g/m³ more water.`
-          : `<b>Above ${upper !== null ? upper.toFixed(0) : "–"} °C.</b> ` + (d !== null && d >= 0 ? `Outside is ${d.toFixed(1)}° warmer – windows closed, AC on.` : "Outside is not cool enough to help.");
+          : `<b>Above ${upper !== null ? upper.toFixed(0) : "–"} °C.</b> ` + (d !== null && d >= 0
+            ? `Outside is ${d.toFixed(1)}° warmer – windows closed, AC on.`
+            : d !== null && absOut !== null && absIn !== null && absOut > absIn + 2
+              ? `Outside is ${Math.abs(d).toFixed(1)}° cooler but ${(absOut - absIn).toFixed(1)} g/m³ more humid – keep the windows closed.`
+              : d !== null && d < -0.3 ? `Outside is ${Math.abs(d).toFixed(1)}° cooler – opening the windows helps a little.` : "Outside is not cool enough to help.");
         break;
       case "too_cold":
         advice = `<b>Below comfort.</b> ${lower !== null ? "Comfort starts at " + lower.toFixed(0) + " °C." : ""}`;
@@ -430,8 +459,15 @@ class ThermalTwinCard extends HTMLElement {
       }
       if (room.e.precondition_start) {
         const plan = a.precondition;
-        const txt = plan === "not_needed" ? "not needed" : plan === "late" ? "now (late)" : plan === "now" ? "now" : startTime || "–";
-        chips.push(`<div class="chip" style="--v:${plan === "now" || plan === "late" ? "#22d3ee" : "#FFD700"}" data-more="${room.e.precondition_start}"><small>AC start for ${readyTime || "–"}</small><b>${txt}</b><em>${readyT !== null ? readyT.toFixed(0) + " °C by " + (readyTime || "–") : ""}</em></div>`);
+        const reach = a.precondition_reachable !== false;
+        const pT = num(a.precondition_temperature);
+        const txt = plan === "not_needed" ? "not needed" : plan === "now" || plan === "late" ? "now" : startTime || "–";
+        const sub = plan === "not_needed"
+          ? `${readyT !== null ? readyT.toFixed(0) + " °C" : "target"} on its own`
+          : reach
+            ? `${readyT !== null ? readyT.toFixed(0) + " °C" : ""} by ${readyTime || "–"}`
+            : `max run · only ${pT !== null ? pT.toFixed(1) + " °C" : "–"} reachable`;
+        chips.push(`<div class="chip" style="--v:${plan === "now" || plan === "late" ? "#22d3ee" : reach ? "#FFD700" : "#FF9800"}" data-more="${room.e.precondition_start}"><small>AC start for ${readyTime || "–"}</small><b>${txt}</b><em>${sub}</em></div>`);
       } else if (feels !== null) {
         chips.push(`<div class="chip" style="--v:${feels > (upper || 99) + 3 ? "#FF7043" : "#fff"}" data-more="${room.e.apparent_temperature}"><small>Feels like</small><b>${f1(feels)} °C</b><em>heat index from humidity</em></div>`);
       } else {
@@ -486,7 +522,7 @@ class ThermalTwinCard extends HTMLElement {
         ${tabs}
         <div class="swipe fade" style="--dx:${dx}">
           <div class="hero" style="--fc:${fc}">
-            <div class="box" data-more="${cfg.indoor_sensor || ""}"><small>Inside</small><span class="big" style="color:${tc}">${f1(tin)}°</span><em>${feels !== null ? `feels ${feels.toFixed(1)}° · ` : ""}${inSub || "&nbsp;"}</em></div>
+            <div class="box" data-more="${cfg.indoor_sensor || ""}"><small>Inside</small><span class="big" style="color:${tc}">${f1(tin)}°</span><em>${inSub || "&nbsp;"}</em>${feels !== null ? `<em>feels like ${feels.toFixed(1)}°</em>` : ""}</div>
             <div class="flow"><div class="arrow ${fcls}"><i></i><i></i><i></i></div><div class="dl">${dTxt}</div><div class="dc">${fcap}</div></div>
             <div class="box" data-more="${cfg.outdoor_entity || ""}"><small>Outside</small><span class="mid">${f1(tout)}°</span><em>${outSub || "&nbsp;"}</em></div>
           </div>

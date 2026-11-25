@@ -161,3 +161,15 @@ def test_psychrometrics():
     assert abs(model.heat_index(20.0, 50.0) - 19.6) < 1.0
     assert model.sun_factor(-10.0) == 0.0
     assert abs(model.sun_factor(90.0) - 1.0) < 1e-9
+
+
+def test_precondition_unreachable_starts_at_max_lead():
+    params = _params()
+    ready = 12 * 3600.0
+    plan = model.plan_precondition(
+        params, 30.0, 0.0, ready, 20.0, TRUE_COOL, lambda _ts: 32.0, max_lead_h=4.0
+    )
+    assert plan is not None
+    assert plan.reachable is False
+    assert plan.status == "scheduled"
+    assert plan.start_ts == ready - 4 * 3600.0

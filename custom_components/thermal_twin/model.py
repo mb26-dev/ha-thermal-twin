@@ -408,6 +408,7 @@ class Precondition:
     hvac_minutes: float | None
     without_hvac: float | None  # predicted temperature at ready time
     with_hvac: float | None
+    reachable: bool = True  # False: even the longest allowed run misses the target
 
 
 def plan_precondition(
@@ -456,11 +457,30 @@ def plan_precondition(
             best = (ts, end)
             break
     if best is None:
+        # Not reachable within the allowed lead time: run as long as allowed.
+        start = earliest
+        temp_at_start = t_in
+        for ts, temp in passive:
+            if ts <= start:
+                temp_at_start = temp
         run = simulate(
-            params, t_in, now_ts, hours, t_out_at, solar_at, hvac_rate=hvac_rate, step_h=step_h
+            params,
+            temp_at_start,
+            start,
+            (ready_ts - start) / 3600.0,
+            t_out_at,
+            solar_at,
+            hvac_rate=hvac_rate,
+            step_h=step_h,
         )
+        late = start <= now_ts + step_h * 3600.0
         return Precondition(
-            "late", now_ts, hours * 60.0, without, run[-1][1] if run else None
+            "late" if late else "scheduled",
+            start,
+            (ready_ts - start) / 60.0,
+            without,
+            run[-1][1] if run else None,
+            reachable=False,
         )
     start_ts, end = best
     status = "now" if start_ts <= now_ts + step_h * 3600.0 else "scheduled"

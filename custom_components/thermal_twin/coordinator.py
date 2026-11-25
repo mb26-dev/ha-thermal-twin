@@ -11,6 +11,9 @@ from functools import partial
 import math
 from typing import TYPE_CHECKING, Any
 
+from astral import Observer
+from astral.sun import elevation as solar_elevation
+
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
@@ -21,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.sun import get_astral_location
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PowerConverter, TemperatureConverter
@@ -362,7 +364,7 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
         self._use_solar = False
         self._ventilation_on = False
         self._sun_cache: dict[int, float] = {}
-        self._astral = None
+        self._astral: Observer | None = None
         self._forecast_points: list[tuple[float, float]] = []
         self._forecast_fetched = 0.0
         self._usage: dict[str, Any] = {"day": None, "runtime_s": 0.0, "energy_wh": 0.0}
@@ -407,7 +409,8 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
         """Load persisted samples or bootstrap from recorder history."""
         if self.use_sun:
             try:
-                self._astral = get_astral_location(self.hass)
+                cfg = self.hass.config
+                self._astral = Observer(cfg.latitude, cfg.longitude, cfg.elevation or 0)
             except Exception:  # noqa: BLE001 - sun position is optional
                 LOGGER.debug("Sun position unavailable", exc_info=True)
                 self.use_sun = False
@@ -463,10 +466,9 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
         cached = self._sun_cache.get(key)
         if cached is not None:
             return cached
-        location, elevation = self._astral
         when = datetime.fromtimestamp(key * SAMPLE_INTERVAL_S, UTC)
         try:
-            value = sun_factor(location.solar_elevation(when, elevation))
+            value = sun_factor(solar_elevation(self._astral, when))
         except Exception:  # noqa: BLE001 - astral edge cases (polar regions)
             value = 0.0
         if len(self._sun_cache) > MAX_SAMPLES * 2:
@@ -838,7 +840,10 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
             data.abs_out = absolute_humidity(t_out, data.rh_out)
 
         if t_in is None or t_out is None:
-            data.status = "learning" if not params.is_trained else "comfortable"
+            if hvac_on:
+                data.status = "cooling" if self.hvac_type == HVAC_TYPE_COOL else "heating"
+            else:
+                data.status = "learning" if not params.is_trained else "comfortable"
             return data
 
         upper = self.comfort_max if self.comfort_max is not None else self.target
