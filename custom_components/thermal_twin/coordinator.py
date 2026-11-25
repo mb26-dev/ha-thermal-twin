@@ -653,7 +653,6 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
         now = dt_util.utcnow().timestamp()
         if now - self._forecast_fetched < WEATHER_REFRESH_S:
             return
-        self._forecast_fetched = now
         try:
             response = await self.hass.services.async_call(
                 "weather",
@@ -684,7 +683,10 @@ class ThermalTwinCoordinator(DataUpdateCoordinator[ThermalTwinData]):
             points.append((when.timestamp(), temp))
         points.sort()
         if points:
+            # Only a successful fetch waits for the next refresh window, so a
+            # weather entity that is not ready at startup is retried in 5 min.
             self._forecast_points = points
+            self._forecast_fetched = now
 
     def _outdoor_function(self, now_ts: float, t_out_now: float) -> Callable[[float], float]:
         """Outdoor temperature over time: forecast, bias-corrected to the sensor."""
