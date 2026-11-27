@@ -11,9 +11,9 @@
 
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5?logo=homeassistantcommunitystore&logoColor=white" alt="HACS"></a>
-  <a href="https://github.com/mb26-dev/ha-thermal-twin/releases"><img src="https://img.shields.io/github/v/release/mb26-dev/ha-thermal-twin?label=release" alt="Release"></a>
+  <a href="https://github.com/mb26-dev/ha-thermal-twin/releases"><img src="https://img.shields.io/badge/release-v0.1.1-blue" alt="Release v0.1.1"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2026.3%2B-18BCF2?logo=homeassistant&logoColor=white" alt="Home Assistant">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/mb26-dev/ha-thermal-twin" alt="License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License MIT"></a>
   <a href="https://ko-fi.com/mb26dev"><img src="https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
 </p>
 
